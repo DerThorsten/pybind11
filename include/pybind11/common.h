@@ -48,6 +48,7 @@
 #include <Python.h>
 #include <frameobject.h>
 #include <pythread.h>
+#include "stl_fix.h"
 
 #if defined(_WIN32) && (defined(min) || defined(max))
 #  error Macro clash with min and max -- define NOMINMAX when compiling your program on Windows
@@ -277,7 +278,9 @@ struct internals {
     std::unordered_map<const void *, void*> registered_types_py;       // PyTypeObject* -> type_info
     std::unordered_multimap<const void *, void*> registered_instances; // void * -> PyObject*
     std::unordered_set<std::pair<const PyObject *, const char *>, overload_hash> inactive_overload_cache;
-    std::forward_list<void (*) (std::exception_ptr)> registered_exception_translators;
+    #ifndef PYBIND11_NO_EXCEPTION_PTR
+    std::forward_list< void (*) (std::exception_ptr) > registered_exception_translators;
+    #endif
 #if defined(WITH_THREAD)
     decltype(PyThread_create_key()) tstate = 0; // Usually an int but a long on Cygwin64 with Python 3.x
     PyInterpreterState *istate = nullptr;

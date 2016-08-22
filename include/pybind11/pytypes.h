@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "stl_fix.h"
 #include "common.h"
 #include <utility>
 #include <type_traits>

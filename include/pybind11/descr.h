@@ -10,10 +10,16 @@
 
 #pragma once
 
+#include "stl_fix.h"
 #include "common.h"
+
+
+
 
 NAMESPACE_BEGIN(pybind11)
 NAMESPACE_BEGIN(detail)
+
+
 
 
 #if defined(__clang__)

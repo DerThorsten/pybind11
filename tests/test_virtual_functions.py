@@ -1,5 +1,5 @@
 import pytest
-from pybind11_tests import ConstructorStats
+#from pybind11_tests import ConstructorStats
 
 
 def test_override(capture, msg):
@@ -45,13 +45,13 @@ def test_override(capture, msg):
         runExampleVirtVirtual(ex12p)
     assert capture == "ExtendedExampleVirt::pure_virtual(): Hello world"
 
-    cstats = ConstructorStats.get(ExampleVirt)
-    assert cstats.alive() == 2
-    del ex12, ex12p
-    assert cstats.alive() == 0
-    assert cstats.values() == ['10', '11']
-    assert cstats.copy_constructions == 0
-    assert cstats.move_constructions >= 0
+    #cstats = ConstructorStats.get(ExampleVirt)
+    #assert cstats.alive() == 2
+    #del ex12, ex12p
+    #assert cstats.alive() == 0
+    #assert cstats.values() == ['10', '11']
+    #assert cstats.copy_constructions == 0
+    #assert cstats.move_constructions >= 0
 
 
 def test_inheriting_repeat():
@@ -184,16 +184,16 @@ def test_move_support():
     with pytest.raises(RuntimeError):
         ncv2.print_nc(9, 9)
 
-    nc_stats = ConstructorStats.get(NonCopyable)
-    mv_stats = ConstructorStats.get(Movable)
-    assert nc_stats.alive() == 1
-    assert mv_stats.alive() == 1
-    del ncv1, ncv2
-    assert nc_stats.alive() == 0
-    assert mv_stats.alive() == 0
-    assert nc_stats.values() == ['4', '9', '9', '9']
-    assert mv_stats.values() == ['4', '5', '7', '7']
-    assert nc_stats.copy_constructions == 0
-    assert mv_stats.copy_constructions == 1
-    assert nc_stats.move_constructions >= 0
-    assert mv_stats.move_constructions >= 0
+    #nc_stats = ConstructorStats.get(NonCopyable)
+    #mv_stats = ConstructorStats.get(Movable)
+    #assert nc_stats.alive() == 1
+    #assert mv_stats.alive() == 1
+    #del ncv1, ncv2
+    #assert nc_stats.alive() == 0
+    #assert mv_stats.alive() == 0
+    #assert nc_stats.values() == ['4', '9', '9', '9']
+    #assert mv_stats.values() == ['4', '5', '7', '7']
+    #assert nc_stats.copy_constructions == 0
+    #assert mv_stats.copy_constructions == 1
+    #assert nc_stats.move_constructions >= 0
+    #assert mv_stats.move_constructions >= 0

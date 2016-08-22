@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "stl_fix.h"
 #include "pytypes.h"
 #include "typeid.h"
 #include "descr.h"
@@ -49,6 +50,7 @@ PYBIND11_NOINLINE inline internals &get_internals() {
             internals_ptr->istate = tstate->interp;
         #endif
         builtins[id] = capsule(internals_ptr);
+        #ifndef PYBIND11_NO_EXCEPTION_PTR
         internals_ptr->registered_exception_translators.push_front(
             [](std::exception_ptr p) -> void {
                 try {
@@ -71,6 +73,7 @@ PYBIND11_NOINLINE inline internals &get_internals() {
                 }
             }
         );
+        #endif
     }
     return *internals_ptr;
 }

@@ -28,7 +28,8 @@
 #  pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #  pragma GCC diagnostic ignored "-Wattributes"
 #endif
-
+    
+#include "stl_fix.h"
 #include "attr.h"
 
 NAMESPACE_BEGIN(pybind11)
@@ -424,7 +425,9 @@ protected:
             }
         } catch (const error_already_set &) {
             return nullptr;
-        } catch (...) {
+        } 
+        #ifndef PYBIND11_NO_EXCEPTION_PTR
+        catch (...) {
             /* When an exception is caught, give each registered exception
                translator a chance to translate it to a Python exception
                in reverse order of registration.
@@ -450,6 +453,24 @@ protected:
             PyErr_SetString(PyExc_SystemError, "Exception escaped from default exception translator!");
             return nullptr;
         }
+        #else
+                //catch (const error_already_set &)      {                                                 return;} 
+                catch (const index_error &e)           { PyErr_SetString(PyExc_IndexError,    e.what()); return nullptr;}
+                catch (const key_error &e)             { PyErr_SetString(PyExc_KeyError,      e.what()); return nullptr;}
+                catch (const value_error &e)           { PyErr_SetString(PyExc_ValueError,    e.what()); return nullptr;}
+                catch (const stop_iteration &e)        { PyErr_SetString(PyExc_StopIteration, e.what()); return nullptr;}
+                catch (const std::bad_alloc &e)        { PyErr_SetString(PyExc_MemoryError,   e.what()); return nullptr;}
+                catch (const std::domain_error &e)     { PyErr_SetString(PyExc_ValueError,    e.what()); return nullptr;}
+                catch (const std::invalid_argument &e) { PyErr_SetString(PyExc_ValueError,    e.what()); return nullptr;}
+                catch (const std::length_error &e)     { PyErr_SetString(PyExc_ValueError,    e.what()); return nullptr;}
+                catch (const std::out_of_range &e)     { PyErr_SetString(PyExc_IndexError,    e.what()); return nullptr;}
+                catch (const std::range_error &e)      { PyErr_SetString(PyExc_ValueError,    e.what()); return nullptr;}
+                catch (const std::exception &e)        { PyErr_SetString(PyExc_RuntimeError,  e.what()); return nullptr;}
+                catch (...) {
+                    PyErr_SetString(PyExc_RuntimeError, "Caught an unknown exception!");
+                    return nullptr;
+                }
+        #endif
 
         if (result.ptr() == PYBIND11_TRY_NEXT_OVERLOAD) {
             std::string msg = "Incompatible " + std::string(overloads->is_constructor ? "constructor" : "function") +
@@ -1196,12 +1217,13 @@ template <typename InputType, typename OutputType> void implicitly_convertible()
         pybind11_fail("implicitly_convertible: Unable to find type " + type_id<OutputType>());
     ((detail::type_info *) it->second)->implicit_conversions.push_back(implicit_caster);
 }
-
+#ifndef PYBIND11_NO_EXCEPTION_PTR
 template <typename ExceptionTranslator>
 void register_exception_translator(ExceptionTranslator&& translator) {
     detail::get_internals().registered_exception_translators.push_front(
         std::forward<ExceptionTranslator>(translator));
 }
+#endif
 
 /* Wrapper to generate a new Python exception type.
  *
