@@ -12,14 +12,16 @@
 
 #if defined(_MSC_VER)
 #  pragma warning(push)
+#  pragma warning(disable: 4100) // warning C4100: Unreferenced formal parameter
 #  pragma warning(disable: 4127) // warning C4127: Conditional expression is constant
+#  pragma warning(disable: 4512) // warning C4512: Assignment operator was implicitly defined as deleted
 #  pragma warning(disable: 4800) // warning C4800: 'int': forcing value to bool 'true' or 'false' (performance warning)
 #  pragma warning(disable: 4996) // warning C4996: The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name
-#  pragma warning(disable: 4100) // warning C4100: Unreferenced formal parameter
-#  pragma warning(disable: 4512) // warning C4512: Assignment operator was implicitly defined as deleted
-#elif defined(__ICC) || defined(__INTEL_COMPILER)
+#elif defined(__INTEL_COMPILER)
 #  pragma warning(push)
-#  pragma warning(disable:2196)  // warning #2196: routine is both "inline" and "noinline"
+#  pragma warning(disable: 186)   // pointless comparison of unsigned integer with zero
+#  pragma warning(disable: 1334)  // the "template" keyword used for syntactic disambiguation may only be used within a template
+#  pragma warning(disable: 2196)  // warning #2196: routine is both "inline" and "noinline"
 #elif defined(__GNUG__) && !defined(__clang__)
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
@@ -1138,8 +1140,10 @@ PYBIND11_NOINLINE inline void keep_alive_impl(int Nurse, int Patient, handle arg
     keep_alive_impl(nurse, patient);
 }
 
-template <typename Iterator, bool KeyIterator = false> struct iterator_state {
-    Iterator it, end;
+template <typename Iterator, typename Sentinel, bool KeyIterator = false>
+struct iterator_state {
+    Iterator it;
+    Sentinel end;
     bool first;
 };
 
@@ -1148,10 +1152,11 @@ NAMESPACE_END(detail)
 template <typename... Args> detail::init<Args...> init() { return detail::init<Args...>(); }
 
 template <typename Iterator,
+          typename Sentinel,
           typename ValueType = decltype(*std::declval<Iterator>()),
           typename... Extra>
-iterator make_iterator(Iterator first, Iterator last, Extra &&... extra) {
-    typedef detail::iterator_state<Iterator> state;
+iterator make_iterator(Iterator first, Sentinel last, Extra &&... extra) {
+    typedef detail::iterator_state<Iterator, Sentinel> state;
 
     if (!detail::get_type_info(typeid(state))) {
         class_<state>(handle(), "")
@@ -1170,10 +1175,11 @@ iterator make_iterator(Iterator first, Iterator last, Extra &&... extra) {
     return (iterator) cast(state { first, last, true });
 }
 template <typename Iterator,
-          typename KeyType = decltype(std::declval<Iterator>()->first),
+          typename Sentinel,
+          typename KeyType = decltype((*std::declval<Iterator>()).first),
           typename... Extra>
-iterator make_key_iterator(Iterator first, Iterator last, Extra &&... extra) {
-    typedef detail::iterator_state<Iterator, true> state;
+iterator make_key_iterator(Iterator first, Sentinel last, Extra &&... extra) {
+    typedef detail::iterator_state<Iterator, Sentinel, true> state;
 
     if (!detail::get_type_info(typeid(state))) {
         class_<state>(handle(), "")
@@ -1185,7 +1191,7 @@ iterator make_key_iterator(Iterator first, Iterator last, Extra &&... extra) {
                     s.first = false;
                 if (s.it == s.end)
                     throw stop_iteration();
-                return s.it->first;
+                return (*s.it).first;
             }, return_value_policy::reference_internal, std::forward<Extra>(extra)...);
     }
 
@@ -1436,8 +1442,8 @@ NAMESPACE_END(pybind11)
 
 #if defined(_MSC_VER)
 #  pragma warning(pop)
-#elif defined(__ICC) || defined(__INTEL_COMPILER)
-#  pragma warning(pop)
+#elif defined(__INTEL_COMPILER)
+/* Leave ignored warnings on */
 #elif defined(__GNUG__) && !defined(__clang__)
 #  pragma GCC diagnostic pop
 #endif
